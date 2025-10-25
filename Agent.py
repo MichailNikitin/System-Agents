@@ -30,16 +30,16 @@ class Agent:
 
     def move(self, ):
         pass
-    
-matrix_1 = np.zeros ((10, 10))
-matrix_2 = np.ones((2, 3))
-s=matrix_1 [7 : 10, : 3]
-matrix=matrix_1+matrix_2
-print(matrix)
-        
-    
+
+class matrix:
+    def __init__(self, size: int):
+        self.size = size
+        self.agents = []
+    def add_agent(self, start_x: int, start_y: int, type, state: state, speed, alfa):
+        self.agents.append(Agent(start_x, start_y, type, state,  speed, alfa))
+    def remove_agent(self, index):
+        self.agents.pop(index)
+    def run(self):
+        pass
 
 
-A1 = Agent(1, 2, None, None, 2)
-x, y = A1.get_coordinate()
-print(x, y)
