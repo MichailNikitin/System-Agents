@@ -24,18 +24,26 @@ class Agent:
         self.color = color
 
     def get_coordinate(self):
-        return self.x, self.y
+        return [self.x, self.y]
     
     def up(self):
         pass
         
 
     def move(self):
-        pass
+        if self.alfa == 0:
+            self.x += self.speed
+        if self.alfa == 90:
+            self.y -= self.speed
+        if self.alfa == 180:
+            self.x -= self.speed
+        if self.alfa == 270:
+            self.y += self.speed
+
 
 
 class Board(Canvas):
-    def __init__(self, cell_count: int, cell_size: int, line_size: int, cell_color: str, line_color: str):
+    def __init__(self, cell_count: int, cell_size: int, line_size: int, cell_color: str, line_color: str, delay: int):
         self.board_size = cell_count * cell_size + line_size * (cell_count+1)
         super().__init__(
             width=self.board_size, height=self.board_size,
@@ -47,6 +55,7 @@ class Board(Canvas):
         self.cell_colour = cell_color
         self.cell_count = cell_count
         self.agents = []
+        self.delay = delay
         self.master.title("Робот")
         for i in range(cell_size+1):
             x = y = i*(self.cell_size + self.line_size)
@@ -57,8 +66,31 @@ class Board(Canvas):
         self.agents.append(Agent(start_x, start_y, type, state,  speed, alfa, color))
     def remove_agent(self, index):
         self.agents.pop(index)
+    def draw_agents(self):
+        delta = self.cell_size + self.line_size
+        for agent in self.agents:
+            x = agent.get_coordinate()[0]
+            y = agent.get_coordinate()[1]
+            if agent.alfa == 0:
+                points = [delta*(x-1), delta*y, delta*x, delta*y, delta*(x+1), delta*(y+0.5), delta*x, delta*(y+1), delta*(x-1), delta*(y+1)]
+            if agent.alfa == 90:
+                points = [delta*x, delta*(y+2), delta*x, delta*(y+1), delta*(x+0.5), delta*y, delta*(x+1), delta*(y+1), delta*(x+1), delta*(y+2)]
+            if agent.alfa == 180:
+                points = [delta*(x+2), delta*y, delta*(x+1), delta*y, delta*x, delta*(y + 0.5), delta*(x+1), delta*(y + 1), delta*(x+2), delta*(y+1)]
+            if agent.alfa == 270:
+                points = [delta * x, delta * (y - 1), delta * x, delta * y, delta * (x + 0.5), delta * (y + 1),
+                          delta * (x + 1), delta * y, delta * (x + 1), delta * (y - 1)]
+            self.create_polygon(points, outline=agent.color, fill=agent.color)
+    def move_agents(self):
+        for agent in self.agents:
+            agent.move()
+    def on_timer(self):
+        self.draw_agents()
+        self.move_agents()
+        self.after(self.delay, self.on_timer)
     def run(self):
-        pass
+        self.draw_agents()
+        self.on_timer()
 
 
 def main():
@@ -66,10 +98,11 @@ def main():
     cell_count = 10
     max_speed = 3
     alfs = [0, 90, 180, 270]
-    board = Board(cell_count,20,2, "yellow","black")
+    board = Board(cell_count,50, 2, "yellow","black", 2000)
     sp_color = ["red", "blue", "darkgreen", "brown", "purple", "coral"]
     for i in range(6):
-        board.add_agent(random.randint(1, cell_count), random.randint(1, cell_count), None, None, random.randint(1, max_speed), alfs[random.randint(0, 3)], sp_color[i])
+        board.add_agent(random.randint(1, cell_count-2), random.randint(1, cell_count-2), None, None, random.randint(1, max_speed), alfs[random.randint(0, 3)], sp_color[i])
+    board.run()
     root.mainloop()
 
 
