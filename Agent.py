@@ -6,6 +6,7 @@ import numpy as np
 import json
 @dataclass
 
+
 class State:
     power: int = 0
     is_serviceability: bool = False
@@ -13,7 +14,7 @@ class State:
 
 
 class Agent:
-    def __init__(self, start_x: int, start_y: int, type: bool, state: State, speed: int, alfa: int, color: str):
+    def __init__(self, start_x: int, start_y: int, type: bool, state: State, speed: int, alfa: int, color: str, name: str):
         self.x = start_x
         self.y = start_y
         self.type = type
@@ -22,13 +23,13 @@ class Agent:
         self.alfa = alfa
         # self.t_0 = time()
         self.color = color
+        self.name = name
 
     def get_coordinate(self):
         return [self.x, self.y]
     
     def up(self):
         pass
-        
 
     def move(self):
         if self.alfa == 0:
@@ -56,17 +57,21 @@ class Board(Canvas):
         self.cell_count = cell_count
         self.agents = []
         self.delay = delay
-        self.master.title("Робот")
+        self.master.title("Полигон")
         for i in range(cell_size+1):
             x = y = i*(self.cell_size + self.line_size)
             self.create_rectangle(0, y, self.board_size, y + self.line_size, outline=self.line_color, fill=self.line_color)
             self.create_rectangle(x, 0, self.line_size + x, self.board_size, outline=self.line_color, fill=self.line_color)
         self.pack()
-    def add_agent(self, start_x: int, start_y: int, type: bool, state: State, speed: int, alfa: int, color: str):
-        self.agents.append(Agent(start_x, start_y, type, state,  speed, alfa, color))
+
+    def add_agent(self, start_x: int, start_y: int, type: bool, state: State, speed: int, alfa: int, color: str, name: str):
+        self.agents.append(Agent(start_x, start_y, type, state,  speed, alfa, color, name))
+
     def remove_agent(self, index):
         self.agents.pop(index)
+
     def draw_agents(self):
+        self.clear_agents()
         delta = self.cell_size + self.line_size
         for agent in self.agents:
             x = agent.get_coordinate()[0]
@@ -80,14 +85,22 @@ class Board(Canvas):
             if agent.alfa == 270:
                 points = [delta * x, delta * (y - 1), delta * x, delta * y, delta * (x + 0.5), delta * (y + 1),
                           delta * (x + 1), delta * y, delta * (x + 1), delta * (y - 1)]
-            self.create_polygon(points, outline=agent.color, fill=agent.color)
+            self.create_polygon(points, outline=agent.color, fill=agent.color, tag=agent.name)
+
+    def clear_agents(self):
+        for agent in self.agents:
+            self.delete(agent.name)
+
+
     def move_agents(self):
         for agent in self.agents:
             agent.move()
+
     def on_timer(self):
         self.draw_agents()
         self.move_agents()
         self.after(self.delay, self.on_timer)
+
     def run(self):
         self.draw_agents()
         self.on_timer()
@@ -98,10 +111,11 @@ def main():
     cell_count = 10
     max_speed = 3
     alfs = [0, 90, 180, 270]
-    board = Board(cell_count,50, 2, "yellow","black", 2000)
+    board = Board(cell_count, 50, 2, "yellow", "black", 2000)
     sp_color = ["red", "blue", "darkgreen", "brown", "purple", "coral"]
     for i in range(6):
-        board.add_agent(random.randint(1, cell_count-2), random.randint(1, cell_count-2), None, None, random.randint(1, max_speed), alfs[random.randint(0, 3)], sp_color[i])
+        board.add_agent(random.randint(1, cell_count-2), random.randint(1, cell_count-2), None, None,
+                        random.randint(1, max_speed), alfs[random.randint(0, 3)], sp_color[i], "agent" + str(i))
     board.run()
     root.mainloop()
 
