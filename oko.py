@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import mediapipe as mp
 import tkinter as tk
 from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
@@ -34,9 +33,9 @@ class ArucoDetector:
             if hasattr(self.detector_params, param_name):
                 setattr(self.detector_params, param_name, value)
             else:
-                print(f"⚠️ Неизвестный параметр детектора: '{param_name}'")
+                print(f"Неизвестный параметр детектора: '{param_name}'")
 
-        # 🔍 Автоматический путь к калибровке в той же папке, что и config.yaml
+        #Автоматический путь к калибровке в той же папке, что и config.yaml
         config_dir = os.path.dirname(os.path.abspath(config_path))
         calibration_file = os.path.join(config_dir, "camera_calibration_good.npz")
 
@@ -229,16 +228,7 @@ class AllSeeingEye:
         self.root = tk.Tk()
         self.root.title("Всевидящее Око")
         self.root.geometry("1200x800")
-        
-        # Инициализация MediaPipe
-        self.mp_pose = mp.solutions.pose
-        self.mp_hands = mp.solutions.hands
-        self.mp_face = mp.solutions.face_detection
-        self.pose = self.mp_pose.Pose()
-        self.hands = self.mp_hands.Hands()
-        self.face = self.mp_face.FaceDetection()
-        self.mp_draw = mp.solutions.drawing_utils
-        
+
         # Инициализация ArUco детектора
         self.aruco_detector = None
         self.aruco_enabled = False
@@ -419,50 +409,7 @@ class AllSeeingEye:
         
         self.update_info(all_coordinates, self.current_mode)
         return processed_image
-    
-    def detect_mediapipe_features(self, image):
-        height, width = image.shape[:2]
-        coordinates = {}
-        
-        # Конвертируем для MediaPipe
-        image_mp = image.copy()
-        
-        # Детекция позы
-        pose_results = self.pose.process(image_mp)
-        if pose_results.pose_landmarks:
-            self.mp_draw.draw_landmarks(
-                image, pose_results.pose_landmarks, self.mp_pose.POSE_CONNECTIONS,
-                self.mp_draw.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2),
-                self.mp_draw.DrawingSpec(color=(0, 255, 0), thickness=2)
-            )
-            coordinates['pose'] = self.extract_landmarks(pose_results.pose_landmarks, width, height)
-        
-        # Детекция рук
-        hand_results = self.hands.process(image_mp)
-        if hand_results.multi_hand_landmarks:
-            for hand_landmarks in hand_results.multi_hand_landmarks:
-                self.mp_draw.draw_landmarks(
-                    image, hand_landmarks, self.mp_hands.HAND_CONNECTIONS,
-                    self.mp_draw.DrawingSpec(color=(255, 0, 0), thickness=2, circle_radius=2),
-                    self.mp_draw.DrawingSpec(color=(255, 0, 0), thickness=2)
-                )
-            coordinates['hands'] = self.extract_hand_landmarks(hand_results.multi_hand_landmarks, width, height)
-        
-        # Детекция лиц
-        face_results = self.face.process(image_mp)
-        if face_results.detections:
-            for detection in face_results.detections:
-                bbox = detection.location_data.relative_bounding_box
-                x = int(bbox.xmin * width)
-                y = int(bbox.ymin * height)
-                w = int(bbox.width * width)
-                h = int(bbox.height * height)
-                
-                cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
-                coordinates['faces'] = coordinates.get('faces', []) + [{'x': x, 'y': y, 'width': w, 'height': h}]
-        
-        return coordinates
-    
+
     def detect_aruco_features(self, image):
         coordinates = {}
         if self.aruco_detector:
