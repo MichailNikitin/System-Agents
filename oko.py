@@ -549,17 +549,6 @@ class AllSeeingEye:
         
         self.info_text.delete(1.0, tk.END)
         self.info_text.insert(1.0, info_text)
-    
-    def run(self):
-        try:
-            self.root.mainloop()
-        finally:
-            self.stop_camera()
-            self.color_calibrator.stop_calibration()
-            self.pose.close()
-            self.hands.close()
-            self.face.close()
-
 if __name__ == "__main__":
     app = AllSeeingEye()
     app.run()
