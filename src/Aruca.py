@@ -88,9 +88,16 @@ class ArucoDetector:
         corners, ids = self.detect(image)
         rvecs, tvecs = self.estimate_pose(corners, ids)
 
+        detected_ids = set()
+
         if ids is not None:
             for i, mid in enumerate(ids.flatten()):
                 marker_id = int(mid)
+                detected_ids.add(marker_id)
+
+                # Пиксельные координаты центра — среднее по 4 углам
+                center_pixel = corners[i].mean(axis=1).flatten()  # shape (2,)
+
                 rvec = rvecs[i].copy()
                 tvec = tvecs[i].copy()
                 rmat, _ = cv2.Rodrigues(rvec)
@@ -102,15 +109,19 @@ class ArucoDetector:
                     'distance': float(np.linalg.norm(tvec)),
                     'euler_angles': euler.tolist(),
                     'rotation_vector': rvec.flatten().tolist(),
+                    'center_px': center_pixel.tolist(),  # <-- новое поле
                     'valid': True
                 }
 
-        detected_ids = set(ids.flatten()) if ids is not None else set()
+        # Помечаем пропавшие маркеры как невалидные
         for mid in self.last_pose:
             if mid not in detected_ids:
                 self.last_pose[mid]['valid'] = False
 
         return self.last_pose.copy()
+
+
+
 
     def draw(self, image: np.ndarray) -> np.ndarray:
         corners, ids = self.detect(image)
